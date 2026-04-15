@@ -1,0 +1,364 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "活跃 API Key 数",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS active_keys FROM serving.api_keys WHERE status = 'active'"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 2,
+      "title": "今日总请求数",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(request_count), 0) AS total_requests FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 3,
+      "title": "今日成功率",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE WHEN COUNT(*) = 0 THEN 100 ELSE ROUND(100.0 * SUM(CASE WHEN status_code BETWEEN 200 AND 299 THEN 1 ELSE 0 END) / COUNT(*), 1) END AS success_pct FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 90 },
+              { "color": "green", "value": 99 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 4,
+      "title": "今日平均耗时",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(ROUND(AVG(response_time_ms)), 0) AS avg_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date AND response_time_ms IS NOT NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2000 },
+              { "color": "red", "value": 5000 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 5,
+      "title": "今日 P95 耗时",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms)::numeric), 0) AS p95_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date AND response_time_ms IS NOT NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3000 },
+              { "color": "red", "value": 10000 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 6,
+      "title": "今日错误数",
+      "type": "stat",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS error_count FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date AND status_code >= 400"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 7,
+      "title": "API Key 用量与配额",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT k.key_id AS \"Key ID\", k.name AS \"名称\", k.tier AS \"等级\", k.status AS \"状态\", CASE WHEN k.daily_quota IS NULL OR k.daily_quota = 0 THEN 'unlimited' ELSE k.daily_quota::text END AS \"日配额\", COALESCE(SUM(u.request_count), 0) AS \"今日用量\", CASE WHEN k.daily_quota IS NULL OR k.daily_quota = 0 THEN NULL ELSE ROUND(100.0 * COALESCE(SUM(u.request_count), 0) / k.daily_quota, 1) END AS \"配额使用%\", TO_CHAR(k.last_used_at AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD HH24:MI:SS') AS \"最后使用\" FROM serving.api_keys k LEFT JOIN serving.api_usage u ON k.key_id = u.key_id AND (u.created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date GROUP BY k.key_id, k.name, k.tier, k.status, k.daily_quota, k.last_used_at ORDER BY COALESCE(SUM(u.request_count), 0) DESC"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 8,
+      "title": "Endpoint 请求分布 (今日)",
+      "type": "table",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT endpoint AS \"Endpoint\", COUNT(*) AS \"请求数\", SUM(CASE WHEN status_code BETWEEN 200 AND 299 THEN 1 ELSE 0 END) AS \"成功\", SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) AS \"错误\", COALESCE(ROUND(AVG(response_time_ms)), 0) AS \"平均耗时ms\", COALESCE(ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY response_time_ms)::numeric), 0) AS \"P50ms\", COALESCE(ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms)::numeric), 0) AS \"P95ms\", MAX(response_time_ms) AS \"最大耗时ms\" FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date GROUP BY endpoint ORDER BY COUNT(*) DESC"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 9,
+      "title": "每日请求量趋势",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, SUM(request_count) AS total_requests FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "refId": "B",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, SUM(CASE WHEN status_code >= 400 THEN request_count ELSE 0 END) AS error_requests FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "drawStyle": "bars",
+          "fillOpacity": 60,
+          "lineWidth": 1,
+          "showPoints": "never"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "error_requests" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 10,
+      "title": "平均耗时趋势 (按 Endpoint)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, ROUND(AVG(response_time_ms)) AS avg_all_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') AND response_time_ms IS NOT NULL GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "refId": "B",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms)::numeric) AS p95_all_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') AND response_time_ms IS NOT NULL GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "drawStyle": "line",
+          "fillOpacity": 10,
+          "lineWidth": 2,
+          "showPoints": "never"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "p95_all_ms" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 11,
+      "title": "按 Key 的每日用量",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT (date_trunc('day', u.created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, k.name AS metric, SUM(u.request_count) AS requests FROM serving.api_usage u JOIN serving.api_keys k ON k.key_id = u.key_id WHERE (u.created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1, 2 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "drawStyle": "line",
+          "fillOpacity": 20,
+          "lineWidth": 2,
+          "showPoints": "never"
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 12,
+      "title": "状态码分布 (近 7 天)",
+      "type": "piechart",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT status_code::text AS status_code, COUNT(*) AS count FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '6 days') GROUP BY status_code ORDER BY count DESC"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "pieType": "donut", "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "tooltip": { "mode": "single" } }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "xiamimate",
+    "ops",
+    "theme-api"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Theme API 监控",
+  "uid": "xiamimate-theme-api",
+  "version": 103,
+  "weekStart": ""
+}

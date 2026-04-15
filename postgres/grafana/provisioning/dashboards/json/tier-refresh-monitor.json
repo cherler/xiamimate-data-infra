@@ -1,0 +1,341 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "P0 当前待采",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS p0_pending FROM sync.keepa_refresh_status WHERE tier_label = 'P0' AND is_pending AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 2,
+      "title": "P1 当前待采",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS p1_pending FROM sync.keepa_refresh_status WHERE tier_label = 'P1' AND is_pending AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 3,
+      "title": "P2 当前待采",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS p2_pending FROM sync.keepa_refresh_status WHERE tier_label = 'P2' AND is_pending AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 4,
+      "title": "总逾期数量",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS overdue_total FROM sync.keepa_refresh_status WHERE is_overdue AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Tier SLA 总览",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT tier_label AS \"Tier\", MIN(target_window_label) AS \"目标窗口\", ROUND((percentile_cont(0.5) WITHIN GROUP (ORDER BY target_stale_hours) / 24.0)::numeric, 1) AS \"当前中位目标天数\", COUNT(*) AS \"活跃ASIN\", COUNT(*) FILTER (WHERE is_never_fetched) AS \"未首采\", COUNT(*) FILTER (WHERE is_overdue) AS \"已逾期\", COUNT(*) FILTER (WHERE is_pending) AS \"当前待采\", ROUND((100.0 * COUNT(*) FILTER (WHERE is_pending) / GREATEST(COUNT(*), 1))::numeric, 1) AS \"待采占比%\", ROUND(AVG(age_days)::numeric, 1) AS \"平均已采年龄(天)\" FROM sync.keepa_refresh_status WHERE domain::text IN (${domain:singlequote}) GROUP BY tier_label ORDER BY CASE tier_label WHEN 'P0' THEN 1 WHEN 'P1' THEN 2 WHEN 'Anchor' THEN 3 WHEN 'P2' THEN 4 WHEN 'UNSCORED' THEN 5 ELSE 6 END"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "当前待采",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "title": "各站点分层待采",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT domain_label AS \"站点\", COUNT(*) FILTER (WHERE tier_label = 'P0' AND is_pending) AS \"P0待采\", COUNT(*) FILTER (WHERE tier_label = 'P1' AND is_pending) AS \"P1待采\", COUNT(*) FILTER (WHERE tier_label = 'P2' AND is_pending) AS \"P2待采\", COUNT(*) FILTER (WHERE tier_label = 'Anchor' AND is_pending) AS \"Anchor待采\", COUNT(*) FILTER (WHERE tier_label = 'UNSCORED' AND is_pending) AS \"未分层待采\", COUNT(*) FILTER (WHERE is_overdue) AS \"已逾期\", COUNT(*) FILTER (WHERE is_never_fetched) AS \"未首采\" FROM sync.keepa_refresh_status WHERE domain::text IN (${domain:singlequote}) GROUP BY domain, domain_label ORDER BY \"已逾期\" DESC, \"P0待采\" DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 7,
+      "title": "已逾期样本 (Top 50)",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT domain_label AS \"站点\", asin AS \"ASIN\", LEFT(COALESCE(product_title, ''), 72) AS \"标题\", tier_label AS \"Tier\", effective_priority AS \"优先级\", target_window_label AS \"目标窗口\", ROUND((target_stale_hours / 24.0)::numeric, 1) AS \"当前目标天数\", age_days AS \"已过天数\", ROUND((overdue_hours / 24.0)::numeric, 1) AS \"超时天数\", last_fetched_at AS \"上次采集\" FROM sync.keepa_refresh_status WHERE is_overdue AND domain::text IN (${domain:singlequote}) ORDER BY overdue_hours DESC NULLS LAST LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "xiamimate",
+    "ops",
+    "tier-refresh"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "domain",
+        "label": "站点 (Domain)",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "query": "SELECT domain::text AS __value, domain || '/' || CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' END AS __text FROM sync.keepa_asin_registry GROUP BY domain ORDER BY domain",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": "",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "分层刷新监控",
+  "uid": "xiamimate-tier-refresh",
+  "version": 1,
+  "weekStart": ""
+}

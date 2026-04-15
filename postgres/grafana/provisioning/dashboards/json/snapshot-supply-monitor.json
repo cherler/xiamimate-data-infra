@@ -1,0 +1,429 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "当前快照 ASIN 数",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 2,
+      "title": "最近快照距今 (小时)",
+      "type": "stat",
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(MIN(snapshot_age_hours)::numeric, 1) AS latest_snapshot_age_hours FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Offer 字段覆盖率",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND((100.0 * COUNT(*) FILTER (WHERE has_offer_data) / GREATEST(COUNT(*), 1))::numeric, 1) AS offer_coverage_pct FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Offer 明细成功率",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND((100.0 * COUNT(*) FILTER (WHERE offers_successful IS TRUE) / GREATEST(COUNT(*) FILTER (WHERE offers_successful IS NOT NULL), 1))::numeric, 1) AS offer_success_pct FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 5,
+      "title": "平均当前总 Offer 数",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(AVG(total_offer_count)::numeric, 2) AS avg_offer_count FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote}) AND total_offer_count IS NOT NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 6,
+      "title": "快照老化分布",
+      "type": "barchart",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM (SELECT CASE WHEN snapshot_age_hours IS NULL THEN 'unknown' WHEN snapshot_age_hours < 6 THEN '<6h' WHEN snapshot_age_hours < 24 THEN '6-24h' WHEN snapshot_age_hours < 72 THEN '1-3d' ELSE '3d+' END AS bucket, COUNT(*) AS snapshot_count FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote}) GROUP BY 1) s ORDER BY CASE bucket WHEN '<6h' THEN 1 WHEN '6-24h' THEN 2 WHEN '1-3d' THEN 3 WHEN '3d+' THEN 4 ELSE 5 END"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "legend": {
+          "displayMode": "hidden",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "xField": "bucket"
+      }
+    },
+    {
+      "id": 7,
+      "title": "当前总 Offer 分布",
+      "type": "barchart",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM (SELECT CASE WHEN total_offer_count IS NULL THEN 'unknown' WHEN total_offer_count = 0 THEN '0' WHEN total_offer_count BETWEEN 1 AND 2 THEN '1-2' WHEN total_offer_count BETWEEN 3 AND 5 THEN '3-5' WHEN total_offer_count BETWEEN 6 AND 10 THEN '6-10' WHEN total_offer_count BETWEEN 11 AND 20 THEN '11-20' ELSE '21+' END AS bucket, COUNT(*) AS asin_count FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote}) GROUP BY 1) s ORDER BY CASE bucket WHEN '0' THEN 1 WHEN '1-2' THEN 2 WHEN '3-5' THEN 3 WHEN '6-10' THEN 4 WHEN '11-20' THEN 5 WHEN '21+' THEN 6 ELSE 7 END"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xField": "bucket",
+        "legend": {
+          "displayMode": "hidden",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "xField": "bucket"
+      }
+    },
+    {
+      "id": 8,
+      "title": "各站点供给结构",
+      "type": "table",
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 16,
+        "h": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT domain_label AS \"站点\", COUNT(*) AS \"快照数\", ROUND(MIN(snapshot_age_hours)::numeric, 1) AS \"最新快照h\", ROUND(AVG(snapshot_age_hours)::numeric, 1) AS \"平均快照年龄h\", ROUND((100.0 * COUNT(*) FILTER (WHERE has_offer_data) / GREATEST(COUNT(*), 1))::numeric, 1) AS \"Offer覆盖%\", ROUND(AVG(total_offer_count)::numeric, 2) AS \"平均总Offer\", ROUND(AVG(offer_count_fba)::numeric, 2) AS \"平均FBA\", ROUND(AVG(offer_count_fbm)::numeric, 2) AS \"平均FBM\", ROUND(AVG(fba_share_pct)::numeric, 1) AS \"平均FBA占比%\" FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote}) GROUP BY domain, domain_label ORDER BY \"平均总Offer\" DESC NULLS LAST"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 9,
+      "title": "高供给 ASIN (Top 30)",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT domain_label AS \"站点\", asin AS \"ASIN\", LEFT(COALESCE(product_title, ''), 80) AS \"标题\", total_offer_count AS \"总Offer\", offer_count_fba AS \"FBA\", offer_count_fbm AS \"FBM\", fba_share_pct AS \"FBA占比%\", price AS \"当前价格\", review_count AS \"评论数\", rating AS \"评分\", snapshot_age_hours AS \"快照年龄h\", offers_successful AS \"Offer明细成功\", data_capture_time AS \"抓取时间\" FROM sync.keepa_snapshot_status WHERE domain::text IN (${domain:singlequote}) ORDER BY total_offer_count DESC NULLS LAST, data_capture_time DESC LIMIT 30"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "xiamimate",
+    "ops",
+    "snapshot"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "domain",
+        "label": "站点 (Domain)",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "query": "SELECT domain::text AS __value, domain || '/' || CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' END AS __text FROM sync.keepa_product_snapshot GROUP BY domain ORDER BY domain",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": "",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "当前供给快照监控",
+  "uid": "xiamimate-snapshot-supply",
+  "version": 1,
+  "weekStart": ""
+}

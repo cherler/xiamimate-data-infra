@@ -1,0 +1,354 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "shortlist 当前候选数",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "WITH categorized AS ( SELECT r.domain, COALESCE(kr3.category_id, kr2.category_id) AS target_category_id, CASE WHEN kr3.category_id IS NOT NULL THEN 3 ELSE 2 END AS category_depth FROM sync.keepa_asin_registry r JOIN sync.keepa_category_registry kr2 ON kr2.domain = r.domain AND kr2.parent_id = r.root_category_id AND kr2.depth = 2 AND kr2.category_en = NULLIF(split_part(r.category_path, ' > ', 2), '') LEFT JOIN sync.keepa_category_registry kr3 ON kr3.domain = r.domain AND kr3.parent_id = kr2.category_id AND kr3.depth = 3 AND kr3.category_en = NULLIF(split_part(r.category_path, ' > ', 3), '') WHERE r.is_active AND r.root_category_id IS NOT NULL AND r.category_path IS NOT NULL AND r.category_path <> '' AND r.domain::text IN (${domain:singlequote}) ) SELECT COUNT(*) AS total FROM ( SELECT target_category_id, domain FROM categorized WHERE target_category_id IS NOT NULL AND category_depth IN (2,3) GROUP BY target_category_id, domain HAVING COUNT(*) >= 10 ) filtered LEFT JOIN sync.discovery_expansion_state s ON s.expansion_type = 'category' AND s.domain = filtered.domain AND s.target_key = CAST(filtered.target_category_id AS VARCHAR) AND s.last_run_at >= CURRENT_TIMESTAMP - INTERVAL '720 hours' WHERE s.target_key IS NULL"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"}
+    },
+    {
+      "id": 2,
+      "title": "keyword 当前候选数",
+      "type": "stat",
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM sync.keyword_expansion_candidates WHERE is_candidate AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"}
+    },
+    {
+      "id": 3,
+      "title": "近 7 天 shortlist 执行次数",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS runs FROM sync.collection_log WHERE source = 'strategy_category_expand' AND finished_at >= NOW() - INTERVAL '7 days' AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"}
+    },
+    {
+      "id": 4,
+      "title": "近 7 天 keyword 执行次数",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS runs FROM sync.collection_log WHERE source = 'strategy_keyword_expand' AND finished_at >= NOW() - INTERVAL '7 days' AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"}
+    },
+    {
+      "id": 5,
+      "title": "近 7 天新增 ASIN",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(asins_succeeded), 0) AS new_asins FROM sync.collection_log WHERE source IN ('strategy_category_expand', 'strategy_keyword_expand') AND finished_at >= NOW() - INTERVAL '7 days' AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"}
+    },
+    {
+      "id": 6,
+      "title": "近 7 天 token 跳过次数",
+      "type": "stat",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS skip_runs FROM sync.collection_log WHERE source IN ('strategy_category_skip', 'strategy_keyword_skip') AND error_message = 'token_insufficient' AND finished_at >= NOW() - INTERVAL '7 days' AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none"}
+    },
+    {
+      "id": 7,
+      "title": "shortlist 候选池",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "WITH categorized AS ( SELECT r.domain, CASE r.domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' ELSE r.domain::text END AS domain_label, COALESCE(kr3.category_id, kr2.category_id) AS target_category_id, COALESCE(COALESCE(kr3.category_cn, kr3.category_en), COALESCE(kr2.category_cn, kr2.category_en)) AS target_category_name, CASE WHEN kr3.category_id IS NOT NULL THEN 3 ELSE 2 END AS category_depth, COALESCE(kr3.product_count, kr2.product_count, 0) AS category_product_count FROM sync.keepa_asin_registry r JOIN sync.keepa_category_registry kr2 ON kr2.domain = r.domain AND kr2.parent_id = r.root_category_id AND kr2.depth = 2 AND kr2.category_en = NULLIF(split_part(r.category_path, ' > ', 2), '') LEFT JOIN sync.keepa_category_registry kr3 ON kr3.domain = r.domain AND kr3.parent_id = kr2.category_id AND kr3.depth = 3 AND kr3.category_en = NULLIF(split_part(r.category_path, ' > ', 3), '') WHERE r.is_active AND r.root_category_id IS NOT NULL AND r.category_path IS NOT NULL AND r.category_path <> '' AND r.domain::text IN (${domain:singlequote}) ) SELECT domain_label AS \"站点\", target_category_id AS \"类目ID\", LEFT(COALESCE(target_category_name, ''), 64) AS \"类目\", category_depth AS \"层级\", COUNT(*) AS \"样本数\", MAX(category_product_count) AS \"类目商品数\" FROM categorized WHERE target_category_id IS NOT NULL AND category_depth IN (2,3) GROUP BY domain_label, domain, target_category_id, target_category_name, category_depth HAVING COUNT(*) >= 10 ORDER BY COUNT(*) DESC LIMIT 30"
+        }
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "options": {"showHeader": true}
+    },
+    {
+      "id": 8,
+      "title": "keyword 候选池",
+      "type": "table",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT domain_label AS \"站点\", keyword AS \"Keyword\", mapped_asin_count AS \"映射ASIN\", mapped_p0_asin_count AS \"映射P0\", ROUND(trend_30d_avg::numeric, 1) AS \"Trend30d\", ROUND(trend_growth_7d::numeric, 2) AS \"Trend增长\", hot_days_over_30d_avg AS \"Hot天数\", expand_priority AS \"Priority\", hours_since_last_run AS \"距上次运行h\" FROM sync.keyword_expansion_candidates WHERE is_candidate AND domain::text IN (${domain:singlequote}) ORDER BY expand_priority DESC, trend_growth_7d DESC NULLS LAST LIMIT 30"
+        }
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "options": {"showHeader": true}
+    },
+    {
+      "id": 9,
+      "title": "执行与新增 ASIN 趋势",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('hour', finished_at) AS time, SUM(CASE WHEN source = 'strategy_category_expand' THEN 1 ELSE 0 END) AS shortlist_runs, SUM(CASE WHEN source = 'strategy_keyword_expand' THEN 1 ELSE 0 END) AS keyword_runs, SUM(CASE WHEN source IN ('strategy_category_expand', 'strategy_keyword_expand') THEN asins_succeeded ELSE 0 END) AS new_asins FROM sync.collection_log WHERE finished_at >= NOW() - INTERVAL '7 days' AND source IN ('strategy_category_expand', 'strategy_keyword_expand') AND domain::text IN (${domain:singlequote}) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {"defaults": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never"}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "id": 10,
+      "title": "token skip 趋势",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('hour', finished_at) AS time, SUM(CASE WHEN source = 'strategy_category_skip' THEN 1 ELSE 0 END) AS shortlist_skip_runs, SUM(CASE WHEN source = 'strategy_keyword_skip' THEN 1 ELSE 0 END) AS keyword_skip_runs, SUM(CASE WHEN source IN ('strategy_category_skip', 'strategy_keyword_skip') THEN asins_requested ELSE 0 END) AS skipped_candidates FROM sync.collection_log WHERE finished_at >= NOW() - INTERVAL '7 days' AND source IN ('strategy_category_skip', 'strategy_keyword_skip') AND domain::text IN (${domain:singlequote}) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {"defaults": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never"}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "id": 11,
+      "title": "token skip 后恢复执行趋势",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "WITH event_stream AS ( SELECT finished_at, domain, CASE WHEN source IN ('strategy_category_skip', 'strategy_category_expand') THEN 'shortlist' WHEN source IN ('strategy_keyword_skip', 'strategy_keyword_expand') THEN 'keyword' ELSE 'other' END AS expansion_type, CASE WHEN source IN ('strategy_category_skip', 'strategy_keyword_skip') THEN 'skip' ELSE 'expand' END AS event_kind, asins_succeeded FROM sync.collection_log WHERE finished_at >= NOW() - INTERVAL '7 days' AND source IN ('strategy_category_skip', 'strategy_category_expand', 'strategy_keyword_skip', 'strategy_keyword_expand') AND domain::text IN (${domain:singlequote}) ), ordered AS ( SELECT finished_at, domain, expansion_type, event_kind, asins_succeeded, LAG(event_kind) OVER (PARTITION BY domain, expansion_type ORDER BY finished_at) AS prev_event_kind FROM event_stream ), bucketed AS ( SELECT date_trunc('hour', finished_at) + floor(date_part('minute', finished_at) / 5) * INTERVAL '5 minutes' AS time, expansion_type, event_kind, prev_event_kind, asins_succeeded FROM ordered ) SELECT time, SUM(CASE WHEN expansion_type = 'shortlist' AND event_kind = 'expand' AND prev_event_kind = 'skip' THEN 1 ELSE 0 END) AS shortlist_resume_runs, SUM(CASE WHEN expansion_type = 'keyword' AND event_kind = 'expand' AND prev_event_kind = 'skip' THEN 1 ELSE 0 END) AS keyword_resume_runs, SUM(CASE WHEN event_kind = 'expand' AND prev_event_kind = 'skip' THEN asins_succeeded ELSE 0 END) AS resumed_new_asins FROM bucketed GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {"defaults": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never"}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "id": 12,
+      "title": "累计执行状态（按目标）",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 29,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE expansion_type WHEN 'category' THEN 'shortlist' WHEN 'keyword' THEN 'keyword' ELSE expansion_type END AS \"类型\", CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' ELSE domain::text END AS \"站点\", target_key AS \"目标Key\", LEFT(COALESCE(target_label, ''), 72) AS \"标签\", ROUND(last_priority_score::numeric, 2) AS \"最近分数\", last_candidate_count AS \"最近候选数\", last_new_asin_count AS \"最近新增ASIN\", total_new_asin_count AS \"累计新增ASIN\", run_count AS \"执行次数\", last_run_at AS \"最近执行\" FROM sync.discovery_expansion_state WHERE domain::text IN (${domain:singlequote}) ORDER BY run_count DESC, total_new_asin_count DESC, last_run_at DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "options": {"showHeader": true}
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "xiamimate",
+    "ops",
+    "strategy-expansion"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "domain",
+        "label": "站点 (Domain)",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "query": "SELECT domain::text AS __value, domain || '/' || CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' END AS __text FROM sync.keepa_asin_registry GROUP BY domain ORDER BY domain",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": "",
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Phase 3.5 扩张监控",
+  "uid": "xiamimate-strategy-expansion",
+  "version": 100,
+  "weekStart": ""
+}

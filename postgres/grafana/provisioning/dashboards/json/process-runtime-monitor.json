@@ -1,0 +1,385 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "运行中进程数",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS running_count FROM sync.runtime_process_overview WHERE status = 'running'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "green", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 2,
+      "title": "降级/停止进程数",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS unhealthy_count FROM sync.runtime_process_overview WHERE status <> 'running'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 3,
+      "title": "最新快照年龄",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT MAX(snapshot_age_seconds) AS max_snapshot_age_seconds FROM sync.runtime_process_overview"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 120 },
+              { "color": "red", "value": 300 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 4,
+      "title": "API 健康检查异常数",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS api_health_issues FROM sync.runtime_process_overview WHERE process_group = 'api' AND health_status NOT IN ('ok', 'n/a', 'skipped')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 9,
+      "title": "采集进程状态",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE status WHEN 'running' THEN 1 WHEN 'degraded' THEN 0 WHEN 'stopped' THEN -1 ELSE -2 END AS auto_collect_status_code FROM sync.runtime_process_overview WHERE process_key = 'auto_collect'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "running", "color": "green" },
+                "0": { "text": "degraded", "color": "yellow" },
+                "-1": { "text": "stopped", "color": "red" },
+                "-2": { "text": "unknown", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0 },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 10,
+      "title": "采集日志陈旧秒数",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(log_age_seconds, 0) AS auto_collect_log_age_seconds FROM sync.runtime_process_overview WHERE process_key = 'auto_collect'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 600 },
+              { "color": "red", "value": 1800 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 11,
+      "title": "最近采集完成距今",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(EXTRACT(EPOCH FROM (NOW() - MAX(finished_at))), 999999)::BIGINT AS seconds_since_last_collect FROM sync.collection_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 900 },
+              { "color": "red", "value": 3600 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 12,
+      "title": "最近24h采集轮次",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS collect_runs_last_24h FROM sync.collection_log WHERE finished_at >= NOW() - INTERVAL '24 hours'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "green", "value": 200 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 5,
+      "title": "当前进程状态",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT process_label AS \"进程\", process_group AS \"分组\", status AS \"状态\", pid AS \"PID\", health_status AS \"健康检查\", uptime_seconds AS \"运行秒数\", log_age_seconds AS \"日志陈旧秒数\", snapshot_age_seconds AS \"快照年龄秒数\", TO_CHAR(checked_at AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD HH24:MI:SS') AS \"检查时间\", notes AS \"备注\" FROM sync.runtime_process_overview ORDER BY process_group, process_label"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 6,
+      "title": "进程状态时间序列",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT checked_at AS time, process_label AS metric, CASE status WHEN 'running' THEN 1 WHEN 'degraded' THEN 0 WHEN 'stopped' THEN -1 ELSE -2 END AS value FROM sync.runtime_process_history WHERE checked_at >= NOW() - INTERVAL '24 hours' ORDER BY 1, 2"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "drawStyle": "line",
+          "lineWidth": 2,
+          "showPoints": "never",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0 },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 7,
+      "title": "日志陈旧秒数趋势",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT checked_at AS time, process_label AS metric, log_age_seconds AS value FROM sync.runtime_process_history WHERE checked_at >= NOW() - INTERVAL '24 hours' AND log_updated_at IS NOT NULL ORDER BY 1, 2"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "drawStyle": "line", "lineWidth": 2, "showPoints": "never" },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 8,
+      "title": "最近异常快照",
+      "type": "table",
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT TO_CHAR(checked_at AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD HH24:MI:SS') AS \"时间\", process_label AS \"进程\", status AS \"状态\", COALESCE(health_status, 'n/a') AS \"健康检查\", notes AS \"备注\" FROM sync.runtime_process_history WHERE checked_at >= NOW() - INTERVAL '7 days' AND status <> 'running' ORDER BY checked_at DESC LIMIT 100"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["runtime", "process", "ops"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "进程运行监控",
+  "uid": "xiamimate-runtime-process",
+  "version": 1,
+  "weekStart": ""
+}

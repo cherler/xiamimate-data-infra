@@ -1,0 +1,657 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "活跃 ASIN",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM sync.keepa_refresh_status WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 2,
+      "title": "当前待采",
+      "type": "stat",
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS pending_now FROM sync.keepa_refresh_status WHERE is_pending AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 3,
+      "title": "已逾期",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS overdue_now FROM sync.keepa_refresh_status WHERE is_overdue AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 4,
+      "title": "未首采",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS never_fetched FROM sync.keepa_refresh_status WHERE is_never_fetched AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 5,
+      "title": "近 24h 异常任务",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS error_runs FROM sync.collection_log WHERE finished_at >= NOW() - INTERVAL '24 hours' AND domain::text IN (${domain:singlequote}) AND COALESCE(error_message, '') <> ''"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 6,
+      "title": "最近采集距今 (分钟)",
+      "type": "stat",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND((EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - MAX(finished_at))) / 60.0)::numeric, 1) AS minutes_since_last_run FROM sync.collection_log WHERE finished_at IS NOT NULL AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 7,
+      "title": "采集吞吐 (近 7 天, 5 分钟聚合)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('hour', finished_at) + floor(date_part('minute', finished_at) / 5) * INTERVAL '5 minutes' AS time, SUM(asins_succeeded) AS asins_succeeded, SUM(rows_ingested) AS rows_ingested FROM sync.collection_log WHERE finished_at >= NOW() - INTERVAL '7 days' AND domain::text IN (${domain:singlequote}) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "drawStyle": "line",
+          "fillOpacity": 10,
+          "lineWidth": 2,
+          "showPoints": "never"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Token 消耗 (近 7 天, 5 分钟聚合)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('hour', finished_at) + floor(date_part('minute', finished_at) / 5) * INTERVAL '5 minutes' AS time, SUM(tokens_consumed) AS tokens_consumed FROM sync.collection_log WHERE finished_at >= NOW() - INTERVAL '7 days' AND domain::text IN (${domain:singlequote}) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "drawStyle": "line",
+          "fillOpacity": 10,
+          "lineWidth": 2,
+          "showPoints": "never"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "站点运行概览",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 14,
+        "h": 10
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "WITH refresh AS ( SELECT domain, domain_label, COUNT(*) AS active_asins, COUNT(*) FILTER (WHERE is_pending) AS pending_now, COUNT(*) FILTER (WHERE is_overdue) AS overdue_now, COUNT(*) FILTER (WHERE is_never_fetched) AS never_fetched FROM sync.keepa_refresh_status WHERE domain::text IN (${domain:singlequote}) GROUP BY domain, domain_label ), category_progress AS ( SELECT domain, COUNT(*) AS total_categories, COUNT(*) FILTER (WHERE bestseller_fetched_at IS NOT NULL) AS fetched_categories, COALESCE(SUM(COALESCE(bestseller_asin_count, 0)), 0) AS l1_seeded_asins FROM sync.keepa_category_registry WHERE depth = 1 AND domain::text IN (${domain:singlequote}) GROUP BY domain ), expansion_pool AS ( SELECT domain, COUNT(*) AS expansion_asins FROM sync.keepa_asin_registry WHERE is_active = TRUE AND discovery_source IN ('subcategory_bestseller', 'strategy_search') AND domain::text IN (${domain:singlequote}) GROUP BY domain ), snapshot_freshness AS ( SELECT domain, ROUND((EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - MAX(data_capture_time))) / 3600.0)::numeric, 1) AS snapshot_age_hours FROM sync.keepa_product_snapshot WHERE domain::text IN (${domain:singlequote}) GROUP BY domain ) SELECT r.domain_label AS \"站点\", r.active_asins AS \"活跃ASIN\", r.pending_now AS \"当前待采\", r.overdue_now AS \"已逾期\", r.never_fetched AS \"未首采\", COALESCE(c.l1_seeded_asins, 0) AS \"L1入池ASIN\", COALESCE(e.expansion_asins, 0) AS \"扩展ASIN\", COALESCE(c.fetched_categories, 0) AS \"已采类目\", COALESCE(c.total_categories, 0) AS \"总类目\", ROUND((100.0 * COALESCE(c.fetched_categories, 0) / GREATEST(COALESCE(c.total_categories, 0), 1))::numeric, 1) AS \"BestSeller覆盖%\", COALESCE(s.snapshot_age_hours, 0) AS \"快照滞后h\" FROM refresh r LEFT JOIN category_progress c ON r.domain = c.domain LEFT JOIN expansion_pool e ON r.domain = e.domain LEFT JOIN snapshot_freshness s ON r.domain = s.domain ORDER BY r.domain"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "当前待采",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "title": "最近异常日志",
+      "type": "table",
+      "gridPos": {
+        "x": 14,
+        "y": 16,
+        "w": 10,
+        "h": 10
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT finished_at AS \"时间\", CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' ELSE domain::text END AS \"站点\", source AS \"来源\", LEFT(error_message, 180) AS \"错误\" FROM sync.collection_log WHERE COALESCE(error_message, '') <> '' AND domain::text IN (${domain:singlequote}) ORDER BY finished_at DESC LIMIT 30"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 11,
+      "title": "L1 Top100 入池 ASIN",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(COALESCE(bestseller_asin_count, 0)), 0) AS l1_seeded_asins FROM sync.keepa_category_registry WHERE depth = 1 AND is_active = TRUE AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 12,
+      "title": "扩展活跃 ASIN",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS expansion_asins FROM sync.keepa_asin_registry WHERE is_active = TRUE AND discovery_source IN ('subcategory_bestseller', 'strategy_search') AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 13,
+      "title": "已覆盖站点",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT domain) AS active_domains FROM sync.keepa_asin_registry WHERE is_active = TRUE AND domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 14,
+      "title": "扩展累计新增",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 4,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(total_new_asin_count), 0) AS total_new_asins FROM sync.discovery_expansion_state WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "xiamimate",
+    "ops",
+    "collection"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "domain",
+        "label": "站点 (Domain)",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "query": "SELECT domain::text AS __value, domain || '/' || CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' END AS __text FROM sync.keepa_asin_registry GROUP BY domain ORDER BY domain",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": "",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "采集指挥台",
+  "uid": "xiamimate-collection-control",
+  "version": 2,
+  "weekStart": ""
+}

@@ -1,0 +1,237 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "base 行数",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM serving.theme_base_daily WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 2,
+      "title": "trends 行数",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM serving.theme_trends_daily WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 3,
+      "title": "cross 行数",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM serving.theme_cross_daily WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 4,
+      "title": "base 最新日期",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT MAX(date)::text AS max_date FROM serving.theme_base_daily WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 5,
+      "title": "最新 synced_at",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT MAX(synced_at) AS last_sync FROM serving.theme_base_daily WHERE domain::text IN (${domain:singlequote})"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "dateTimeFromNow" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 6,
+      "title": "覆盖站点数",
+      "type": "stat",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT domain) AS domains FROM serving.theme_base_daily"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "id": 7,
+      "title": "各表 ASIN 数 × 站点",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' ELSE domain::text END AS \"站点\", COUNT(DISTINCT asin) AS \"ASIN数\", COUNT(*) AS \"总行数\", MIN(date)::text AS \"最早日期\", MAX(date)::text AS \"最新日期\", MAX(synced_at) AS \"最后同步\" FROM serving.theme_base_daily WHERE domain::text IN (${domain:singlequote}) GROUP BY domain ORDER BY domain"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 8,
+      "title": "三表数据新鲜度",
+      "type": "table",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT 'theme_base_daily' AS \"表\", COUNT(*) AS \"总行数\", COUNT(DISTINCT asin) AS \"ASIN数\", MIN(date)::text AS \"最早日期\", MAX(date)::text AS \"最新日期\", MAX(synced_at) AS \"最后同步\" FROM serving.theme_base_daily UNION ALL SELECT 'theme_trends_daily', COUNT(*), COUNT(DISTINCT asin), MIN(date)::text, MAX(date)::text, MAX(synced_at) FROM serving.theme_trends_daily UNION ALL SELECT 'theme_cross_daily', COUNT(*), COUNT(DISTINCT asin), MIN(date)::text, MAX(date)::text, MAX(synced_at) FROM serving.theme_cross_daily"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 9,
+      "title": "每日同步行数趋势",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', synced_at) AS time, COUNT(*) FILTER (WHERE synced_at IS NOT NULL) AS synced_rows FROM serving.theme_base_daily WHERE synced_at >= NOW() - INTERVAL '14 days' AND domain::text IN (${domain:singlequote}) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": { "defaults": { "drawStyle": "bars", "fillOpacity": 40, "lineWidth": 1, "showPoints": "never" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 10,
+      "title": "数据日期覆盖范围",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT date AS time, COUNT(DISTINCT asin) AS asin_count FROM serving.theme_base_daily WHERE date >= NOW() - INTERVAL '30 days' AND domain::text IN (${domain:singlequote}) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": { "defaults": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "xiamimate",
+    "ops",
+    "feature-sync"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "domain",
+        "label": "站点 (Domain)",
+        "type": "query",
+        "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+        "query": "SELECT domain::text AS __value, domain || '/' || CASE domain WHEN 1 THEN 'US' WHEN 2 THEN 'GB' WHEN 3 THEN 'DE' WHEN 4 THEN 'FR' WHEN 5 THEN 'JP' WHEN 6 THEN 'CA' WHEN 8 THEN 'IT' WHEN 9 THEN 'ES' WHEN 10 THEN 'IN' WHEN 11 THEN 'MX' WHEN 12 THEN 'BR' WHEN 13 THEN 'AU' END AS __text FROM serving.theme_base_daily GROUP BY domain ORDER BY domain",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": "",
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] },
+        "sort": 1
+      }
+    ]
+  },
+  "time": {
+    "from": "now-14d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Feature Sync 监控",
+  "uid": "xiamimate-feature-sync",
+  "version": 100,
+  "weekStart": ""
+}
