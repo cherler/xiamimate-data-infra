@@ -10,7 +10,7 @@
   "panels": [
     {
       "id": 1,
-      "title": "活跃 API Key 数",
+      "title": "活跃用户数",
       "type": "stat",
       "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
@@ -21,7 +21,7 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS active_keys FROM serving.api_keys WHERE status = 'active'"
+          "rawSql": "SELECT COUNT(*) AS active_users FROM app.app_user WHERE status = 'active'"
         }
       ],
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
@@ -29,7 +29,7 @@
     },
     {
       "id": 2,
-      "title": "今日总请求数",
+      "title": "全平台总余额",
       "type": "stat",
       "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
@@ -40,7 +40,7 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(request_count), 0) AS total_requests FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date"
+          "rawSql": "SELECT COALESCE(SUM(balance_points), 0) AS total_balance FROM app.user_credit_account"
         }
       ],
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
@@ -48,7 +48,7 @@
     },
     {
       "id": 3,
-      "title": "今日成功率",
+      "title": "今日积分消费",
       "type": "stat",
       "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
@@ -59,18 +59,18 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN COUNT(*) = 0 THEN 100 ELSE ROUND(100.0 * SUM(CASE WHEN status_code BETWEEN 200 AND 299 THEN 1 ELSE 0 END) / COUNT(*), 1) END AS success_pct FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date"
+          "rawSql": "SELECT COALESCE(SUM(ABS(points_delta)), 0) AS consumed_today FROM app.credit_ledger_entry WHERE entry_type = 'consume' AND (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "short",
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 90 },
-              { "color": "green", "value": 99 }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5000 },
+              { "color": "red", "value": 20000 }
             ]
           }
         },
@@ -80,7 +80,7 @@
     },
     {
       "id": 4,
-      "title": "今日平均耗时",
+      "title": "今日充值/赠送",
       "type": "stat",
       "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
@@ -91,28 +91,15 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(ROUND(AVG(response_time_ms)), 0) AS avg_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date AND response_time_ms IS NOT NULL"
+          "rawSql": "SELECT COALESCE(SUM(points_delta), 0) AS recharged_today FROM app.credit_ledger_entry WHERE entry_type IN ('recharge', 'signup_gift', 'admin_grant', 'subscription_grant') AND (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date"
         }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ms",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 2000 },
-              { "color": "red", "value": 5000 }
-            ]
-          }
-        },
-        "overrides": []
-      },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
     },
     {
       "id": 5,
-      "title": "今日 P95 耗时",
+      "title": "今日交易笔数",
       "type": "stat",
       "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
@@ -123,28 +110,16 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms)::numeric), 0) AS p95_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date AND response_time_ms IS NOT NULL"
+          "rawSql": "SELECT COUNT(*) AS tx_count FROM app.credit_ledger_entry WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date"
         }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ms",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 3000 },
-              { "color": "red", "value": 10000 }
-            ]
-          }
-        },
-        "overrides": []
-      },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
     },
     {
       "id": 6,
-      "title": "今日错误数",
+      "title": "低余额用户",
+      "description": "余额低于 100 积分的活跃用户数",
       "type": "stat",
       "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
@@ -155,7 +130,7 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS error_count FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date AND status_code >= 400"
+          "rawSql": "SELECT COUNT(*) AS low_balance_users FROM app.user_credit_account c JOIN app.app_user u ON u.user_id = c.user_id WHERE u.status = 'active' AND (c.balance_points - c.reserved_points) < 100"
         }
       ],
       "fieldConfig": {
@@ -165,8 +140,8 @@
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 20 }
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 3 }
             ]
           }
         },
@@ -176,9 +151,9 @@
     },
     {
       "id": 7,
-      "title": "API Key 用量与配额",
+      "title": "用户余额总览",
       "type": "table",
-      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "targets": [
         {
@@ -187,17 +162,38 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT k.key_id AS \"Key ID\", k.name AS \"名称\", k.tier AS \"等级\", k.status AS \"状态\", CASE WHEN k.daily_quota IS NULL OR k.daily_quota = 0 THEN 'unlimited' ELSE k.daily_quota::text END AS \"日配额\", COALESCE(SUM(u.request_count), 0) AS \"今日用量\", CASE WHEN k.daily_quota IS NULL OR k.daily_quota = 0 THEN NULL ELSE ROUND(100.0 * COALESCE(SUM(u.request_count), 0) / k.daily_quota, 1) END AS \"配额使用%\", TO_CHAR(k.last_used_at AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD HH24:MI:SS') AS \"最后使用\" FROM serving.api_keys k LEFT JOIN serving.api_usage u ON k.key_id = u.key_id AND (u.created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date GROUP BY k.key_id, k.name, k.tier, k.status, k.daily_quota, k.last_used_at ORDER BY COALESCE(SUM(u.request_count), 0) DESC"
+          "rawSql": "SELECT u.display_name AS \"用户\", u.plan_tier AS \"套餐\", u.status AS \"状态\", c.balance_points AS \"余额积分\", c.reserved_points AS \"预扣积分\", (c.balance_points - c.reserved_points) AS \"可用余额\", c.lifetime_granted_points AS \"累计赠送\", c.lifetime_purchased_points AS \"累计充值\", c.lifetime_spent_points AS \"累计消费\", TO_CHAR(c.updated_at AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD HH24:MI:SS') AS \"更新时间\" FROM app.user_credit_account c JOIN app.app_user u ON u.user_id = c.user_id ORDER BY c.balance_points ASC"
         }
       ],
-      "fieldConfig": { "defaults": {}, "overrides": [] },
-      "options": { "showHeader": true }
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "可用余额" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "yellow", "value": 100 },
+                    { "color": "green", "value": 500 }
+                  ]
+                }
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "可用余额", "desc": false }] }
     },
     {
       "id": 8,
-      "title": "Endpoint 请求分布 (今日)",
+      "title": "今日台账明细 (最近 50 笔)",
       "type": "table",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "targets": [
         {
@@ -206,17 +202,37 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT endpoint AS \"Endpoint\", COUNT(*) AS \"请求数\", SUM(CASE WHEN status_code BETWEEN 200 AND 299 THEN 1 ELSE 0 END) AS \"成功\", SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) AS \"错误\", COALESCE(ROUND(AVG(response_time_ms)), 0) AS \"平均耗时ms\", COALESCE(ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY response_time_ms)::numeric), 0) AS \"P50ms\", COALESCE(ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms)::numeric), 0) AS \"P95ms\", MAX(response_time_ms) AS \"最大耗时ms\" FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date GROUP BY endpoint ORDER BY COUNT(*) DESC"
+          "rawSql": "SELECT TO_CHAR(e.created_at AT TIME ZONE 'Asia/Shanghai', 'HH24:MI:SS') AS \"时间\", u.display_name AS \"用户\", e.entry_type AS \"类型\", COALESCE(e.event_type, '-') AS \"事件\", e.units AS \"数量\", e.points_delta AS \"积分变动\", e.balance_after_points AS \"变动后余额\", COALESCE(e.description, '-') AS \"说明\" FROM app.credit_ledger_entry e JOIN app.app_user u ON u.user_id = e.user_id WHERE (e.created_at AT TIME ZONE 'Asia/Shanghai')::date = (NOW() AT TIME ZONE 'Asia/Shanghai')::date ORDER BY e.created_at DESC LIMIT 50"
         }
       ],
-      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "积分变动" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "green", "value": 0 }
+                  ]
+                }
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          }
+        ]
+      },
       "options": { "showHeader": true }
     },
     {
       "id": 9,
-      "title": "每日请求量趋势",
+      "title": "每日积分消费与充值趋势",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "targets": [
         {
@@ -225,7 +241,7 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, SUM(request_count) AS total_requests FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, SUM(ABS(points_delta)) AS \"消费积分\" FROM app.credit_ledger_entry WHERE entry_type = 'consume' AND (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1 ORDER BY 1"
         },
         {
           "refId": "B",
@@ -233,7 +249,7 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, SUM(CASE WHEN status_code >= 400 THEN request_count ELSE 0 END) AS error_requests FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, SUM(points_delta) AS \"充值/赠送\" FROM app.credit_ledger_entry WHERE entry_type IN ('recharge', 'signup_gift', 'admin_grant', 'subscription_grant') AND (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1 ORDER BY 1"
         }
       ],
       "fieldConfig": {
@@ -245,8 +261,12 @@
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "error_requests" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+            "matcher": { "id": "byName", "options": "消费积分" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "充值/赠送" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
           }
         ]
       },
@@ -254,9 +274,9 @@
     },
     {
       "id": 10,
-      "title": "平均耗时趋势 (按 Endpoint)",
+      "title": "每日交易笔数趋势",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "targets": [
         {
@@ -265,29 +285,24 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, ROUND(AVG(response_time_ms)) AS avg_all_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') AND response_time_ms IS NOT NULL GROUP BY 1 ORDER BY 1"
-        },
-        {
-          "refId": "B",
-          "format": "time_series",
-          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
-          "editorMode": "code",
-          "rawQuery": true,
-          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms)::numeric) AS p95_all_ms FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') AND response_time_ms IS NOT NULL GROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT (date_trunc('day', created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, COUNT(*) FILTER (WHERE entry_type = 'consume') AS \"消费笔数\", COUNT(*) FILTER (WHERE entry_type IN ('recharge', 'signup_gift', 'admin_grant', 'subscription_grant')) AS \"充值笔数\" FROM app.credit_ledger_entry WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1 ORDER BY 1"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "ms",
           "drawStyle": "line",
-          "fillOpacity": 10,
+          "fillOpacity": 20,
           "lineWidth": 2,
           "showPoints": "never"
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "p95_all_ms" },
+            "matcher": { "id": "byName", "options": "消费笔数" },
             "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "充值笔数" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
           }
         ]
       },
@@ -295,9 +310,9 @@
     },
     {
       "id": 11,
-      "title": "按 Key 的每日用量",
+      "title": "按用户每日消费积分",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "targets": [
         {
@@ -306,7 +321,7 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT (date_trunc('day', u.created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, k.name AS metric, SUM(u.request_count) AS requests FROM serving.api_usage u JOIN serving.api_keys k ON k.key_id = u.key_id WHERE (u.created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1, 2 ORDER BY 1"
+          "rawSql": "SELECT (date_trunc('day', e.created_at AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai') AS time, u.display_name AS metric, SUM(ABS(e.points_delta)) AS points FROM app.credit_ledger_entry e JOIN app.app_user u ON u.user_id = e.user_id WHERE e.entry_type = 'consume' AND (e.created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '29 days') GROUP BY 1, 2 ORDER BY 1"
         }
       ],
       "fieldConfig": {
@@ -322,9 +337,9 @@
     },
     {
       "id": 12,
-      "title": "状态码分布 (近 7 天)",
+      "title": "消费事件类型分布 (近 7 天)",
       "type": "piechart",
-      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 },
       "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "targets": [
         {
@@ -333,7 +348,7 @@
           "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT status_code::text AS status_code, COUNT(*) AS count FROM serving.api_usage WHERE (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '6 days') GROUP BY status_code ORDER BY count DESC"
+          "rawSql": "SELECT COALESCE(event_type, entry_type) AS event_type, SUM(ABS(points_delta)) AS points FROM app.credit_ledger_entry WHERE entry_type = 'consume' AND (created_at AT TIME ZONE 'Asia/Shanghai')::date >= ((NOW() AT TIME ZONE 'Asia/Shanghai')::date - INTERVAL '6 days') GROUP BY COALESCE(event_type, entry_type) ORDER BY points DESC"
         }
       ],
       "fieldConfig": { "defaults": {}, "overrides": [] },
@@ -346,7 +361,7 @@
   "tags": [
     "xiamimate",
     "ops",
-    "theme-api"
+    "billing"
   ],
   "templating": {
     "list": []
@@ -357,8 +372,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Theme API 监控",
+  "title": "统一台账与积分监控",
   "uid": "xiamimate-theme-api",
-  "version": 103,
+  "version": 104,
   "weekStart": ""
 }
