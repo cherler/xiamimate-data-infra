@@ -12,7 +12,8 @@ services:
     volumes:
       - ${XIAMIMATE_POSTGRES_DATA_DIR:-./pgdata}:/var/lib/postgresql/data
       - ./init_postgres.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
-      - ./init_sync_tables.sql:/docker-entrypoint-initdb.d/002-sync-tables.sql:ro
+      - ./init_sync_tables.sql:/docker-entrypoint-initdb.d/002-sync-shared.sql:ro
+      - ./init_local_data_infra.sql:/docker-entrypoint-initdb.d/003-local-only.sql:ro
 
   # ---------- Metabase: 数据探索看板 ----------
   metabase:

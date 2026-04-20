@@ -1,6 +1,6 @@
 # XiaMimate Data Infra
 
-这个仓库是 XiaMimate 拆分后的基础设施仓库，用于承接 PostgreSQL、Grafana、Metabase 等基础设施资产。
+这个仓库是 XiaMimate 拆分后的基础设施仓库，用于承接 PostgreSQL schema/migration 资产，以及本地 PostgreSQL、Grafana、Metabase 运行入口。
 
 当前状态：
 
@@ -8,16 +8,25 @@
 - 当前已经接管本地 PostgreSQL、Grafana、Metabase 的正式启动入口。
 - 当前 PostgreSQL 数据目录已迁到共享运行时根目录 `/path/to/xiamimate-runtime/postgres/pgdata`；旧仓仅保留兼容 symlink。
 
+当前结构已经拆成两层：
+
+1. `shared schema`：可同步到 ECS / RDS 执行
+2. `local-only runtime`：只给本地 docker-compose 使用
+
 当前已迁入内容：
 
 - `postgres/docker-compose.yml`
 - `postgres/.env.example`
 - `postgres/init_postgres.sql`
 - `postgres/init_sync_tables.sql`
+- `postgres/init_local_data_infra.sql`
 - `postgres/migrations/bootstrap/`
+- `postgres/migrations/local/`
 - `postgres/migrations/sync/`
 - `postgres/migrations/serving/`
 - `postgres/scripts/rebuild_init_sync_tables.sh`
+- `postgres/scripts/rebuild_init_local_data_infra.sh`
+- `postgres/scripts/bootstrap_rds_sync_schema.sh`
 - `postgres/scripts/manage_local_data_infra.sh`
 - `postgres/grafana/`
 
@@ -25,22 +34,32 @@
 
 - `init_app_tables.sql`
 
-原因：
+职责说明：
 
-- `init_sync_tables.sql` 仍保留为兼容 bootstrap 入口，但它现在由 `postgres/migrations/*` 重建，避免继续把 `sync.*` / `serving.*` 的逻辑直接混写在一个文件里。
+- `init_sync_tables.sql` 是 shared bootstrap，只包含 `sync.*` 核心表、`serving.*` 兼容表、共享索引与共享视图，可直接用于 ECS / RDS。
+- `init_local_data_infra.sql` 是 local-only bootstrap，只包含本地 Grafana / Metabase / 进程巡检依赖的 runtime monitor 表与索引。
+- `postgres/docker-compose.yml` 当前仍是 local-only 运行入口；它会同时加载 shared bootstrap 与 local-only bootstrap。
 - `sync.*`、`serving.*`、`app.*` 的细粒度 schema 所有权仍在拆分中。
 - `pgdata/` 属于运行态数据，已经外置到仓库外的共享运行时目录，不进入 Git。
 
-当前正式运行方式：
+本地正式运行方式：
 
 1. 在 `postgres/.env` 中声明：
-	- `COMPOSE_PROJECT_NAME=postgres`
-	- `XIAMIMATE_RUNTIME_ROOT=/path/to/xiamimate-runtime`
-	- `XIAMIMATE_POSTGRES_DATA_DIR=<当前 PostgreSQL 数据目录>`
-	- `XIAMIMATE_METABASE_VOLUME_NAME=postgres_metabase_data`
-	- `XIAMIMATE_GRAFANA_VOLUME_NAME=postgres_grafana_data`
+   - `COMPOSE_PROJECT_NAME=postgres`
+   - `XIAMIMATE_RUNTIME_ROOT=/path/to/xiamimate-runtime`
+   - `XIAMIMATE_POSTGRES_DATA_DIR=<当前 PostgreSQL 数据目录>`
+   - `XIAMIMATE_METABASE_VOLUME_NAME=postgres_metabase_data`
+   - `XIAMIMATE_GRAFANA_VOLUME_NAME=postgres_grafana_data`
 2. 通过 `bash postgres/scripts/manage_local_data_infra.sh up` 启动 PostgreSQL / Metabase / Grafana。
 3. `postgres/docker-compose.yml` 已为 PostgreSQL / Metabase / Grafana 配置 `restart: unless-stopped`，Docker daemon 恢复后会自动拉起这三个容器；如果希望 macOS 开机后也自动恢复，需要同时让 Docker Desktop 随登录自动启动。
+
+ECS / RDS 使用方式：
+
+1. 可以把仓库同步到 ECS，但不要直接启动 `postgres/docker-compose.yml`。
+2. ECS 只应使用 shared bootstrap：
+   - `bash postgres/scripts/bootstrap_rds_sync_schema.sh`
+   - 或直接执行 `psql -f postgres/init_sync_tables.sql`
+3. `init_local_data_infra.sql`、`manage_local_data_infra.sh`、Grafana provisioning 属于 local-only，不应在 ECS 上直接启用。
 
 下一步：
 

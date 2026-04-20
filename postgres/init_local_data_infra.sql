@@ -1,4 +1,11 @@
--- sync.* runtime monitoring tables and view for Grafana/local service health.
+-- ============================================================
+
+-- local-only bootstrap: rebuild from postgres/migrations/local/*
+-- do not hand-edit this file; edit fragments then rerun rebuild
+-- ============================================================
+
+-- >>> BEGIN migrations/local/010_local_runtime_monitor.sql
+-- local-only runtime monitoring tables and indexes for docker-compose based data infra.
 
 CREATE TABLE IF NOT EXISTS sync.runtime_process_status (
     process_key               VARCHAR PRIMARY KEY,
@@ -74,3 +81,11 @@ SELECT
     uptime_seconds,
     notes
 FROM sync.runtime_process_status;
+
+CREATE INDEX IF NOT EXISTS idx_runtime_process_status_group ON sync.runtime_process_status(process_group, status);
+CREATE INDEX IF NOT EXISTS idx_runtime_process_status_checked_at ON sync.runtime_process_status(checked_at);
+CREATE INDEX IF NOT EXISTS idx_runtime_process_history_checked_at ON sync.runtime_process_history(checked_at DESC);
+CREATE INDEX IF NOT EXISTS idx_runtime_process_history_process_key_checked_at ON sync.runtime_process_history(process_key, checked_at DESC);
+
+-- <<< END migrations/local/010_local_runtime_monitor.sql
+

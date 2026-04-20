@@ -3,16 +3,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUTPUT_FILE="$ROOT_DIR/init_sync_tables.sql"
+OUTPUT_FILE="$ROOT_DIR/init_local_data_infra.sql"
 FRAGMENTS=(
-  "$ROOT_DIR/migrations/bootstrap/001_create_shared_schemas.sql"
-  "$ROOT_DIR/migrations/sync/010_sync_core_tables.sql"
-  "$ROOT_DIR/migrations/serving/010_serving_theme_feature_tables.sql"
-  "$ROOT_DIR/migrations/serving/020_serving_theme_api_auth_tables.sql"
-  "$ROOT_DIR/migrations/sync/030_sync_indexes.sql"
-  "$ROOT_DIR/migrations/serving/030_serving_indexes.sql"
-  "$ROOT_DIR/migrations/sync/040_sync_status_views.sql"
-  "$ROOT_DIR/migrations/sync/050_sync_expansion_candidate_views.sql"
+  "$ROOT_DIR/migrations/local/010_local_runtime_monitor.sql"
 )
 
 for fragment in "${FRAGMENTS[@]}"; do
@@ -24,7 +17,7 @@ done
 
 {
   printf '%s\n\n' '-- ============================================================'
-  printf '%s\n' '-- compatibility bootstrap: rebuild from postgres/migrations/*'
+  printf '%s\n' '-- local-only bootstrap: rebuild from postgres/migrations/local/*'
   printf '%s\n' '-- do not hand-edit this file; edit fragments then rerun rebuild'
   printf '%s\n' '-- ============================================================'
   printf '\n'

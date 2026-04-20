@@ -11,7 +11,3 @@ CREATE INDEX IF NOT EXISTS idx_registry_active ON sync.keepa_asin_registry(is_ac
 CREATE INDEX IF NOT EXISTS idx_asin_raw_mapping_created_at ON sync.asin_raw_file_mapping(created_at);
 CREATE INDEX IF NOT EXISTS idx_category_depth ON sync.keepa_category_registry(depth, product_count);
 CREATE INDEX IF NOT EXISTS idx_discovery_expansion_last_run ON sync.discovery_expansion_state(expansion_type, domain, last_run_at);
-CREATE INDEX IF NOT EXISTS idx_runtime_process_status_group ON sync.runtime_process_status(process_group, status);
-CREATE INDEX IF NOT EXISTS idx_runtime_process_status_checked_at ON sync.runtime_process_status(checked_at);
-CREATE INDEX IF NOT EXISTS idx_runtime_process_history_checked_at ON sync.runtime_process_history(checked_at DESC);
-CREATE INDEX IF NOT EXISTS idx_runtime_process_history_process_key_checked_at ON sync.runtime_process_history(process_key, checked_at DESC);
