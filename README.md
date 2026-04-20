@@ -64,9 +64,11 @@ ECS / RDS 使用方式：
 3. 如果本地 PostgreSQL 已经有历史业务数据，需要先从本地导出，再在 ECS 上导入 RDS：
    - 本地导出：`bash postgres/scripts/export_local_pg_data.sh /tmp/xiamimate_local_pg_data.sql`
    - 传到 ECS：`scp /tmp/xiamimate_local_pg_data.sql <ecs>:/tmp/`
-   - ECS 导入：`bash postgres/scripts/import_sql_to_rds.sh /tmp/xiamimate_local_pg_data.sql`
+   - ECS 导入（目标库为空）：`bash postgres/scripts/import_sql_to_rds.sh /tmp/xiamimate_local_pg_data.sql`
+   - ECS 导入（覆盖已有业务数据）：`RDS_IMPORT_RESET=1 bash postgres/scripts/import_sql_to_rds.sh /tmp/xiamimate_local_pg_data.sql`
 4. `export_local_pg_data.sh` 默认只导出 `app`、`sync`、`serving` 三个业务 schema 的数据，并排除本地巡检表 `sync.runtime_process_status`、`sync.runtime_process_history`。
-5. `init_local_data_infra.sql`、`manage_local_data_infra.sh`、Grafana provisioning 属于 local-only，不应在 ECS 上直接启用。
+5. `import_sql_to_rds.sh` 默认会先检查 `app`、`sync`、`serving` 是否为空；如果检测到非空表，会提前失败并提示使用 `RDS_IMPORT_RESET=1`，避免导入到一半才因为主键冲突中断。
+6. `init_local_data_infra.sql`、`manage_local_data_infra.sh`、Grafana provisioning 属于 local-only，不应在 ECS 上直接启用。
 
 下一步：
 
