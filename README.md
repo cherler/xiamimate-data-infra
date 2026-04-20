@@ -27,6 +27,8 @@
 - `postgres/scripts/rebuild_init_sync_tables.sh`
 - `postgres/scripts/rebuild_init_local_data_infra.sh`
 - `postgres/scripts/bootstrap_rds_sync_schema.sh`
+- `postgres/scripts/export_local_pg_data.sh`
+- `postgres/scripts/import_sql_to_rds.sh`
 - `postgres/scripts/manage_local_data_infra.sh`
 - `postgres/grafana/`
 
@@ -59,7 +61,12 @@ ECS / RDS 使用方式：
 2. ECS 只应使用 shared bootstrap：
    - `bash postgres/scripts/bootstrap_rds_sync_schema.sh`
    - 或直接执行 `psql -f postgres/init_sync_tables.sql`
-3. `init_local_data_infra.sql`、`manage_local_data_infra.sh`、Grafana provisioning 属于 local-only，不应在 ECS 上直接启用。
+3. 如果本地 PostgreSQL 已经有历史业务数据，需要先从本地导出，再在 ECS 上导入 RDS：
+   - 本地导出：`bash postgres/scripts/export_local_pg_data.sh /tmp/xiamimate_local_pg_data.sql`
+   - 传到 ECS：`scp /tmp/xiamimate_local_pg_data.sql <ecs>:/tmp/`
+   - ECS 导入：`bash postgres/scripts/import_sql_to_rds.sh /tmp/xiamimate_local_pg_data.sql`
+4. `export_local_pg_data.sh` 默认只导出 `app`、`sync`、`serving` 三个业务 schema 的数据，并排除本地巡检表 `sync.runtime_process_status`、`sync.runtime_process_history`。
+5. `init_local_data_infra.sql`、`manage_local_data_infra.sh`、Grafana provisioning 属于 local-only，不应在 ECS 上直接启用。
 
 下一步：
 
