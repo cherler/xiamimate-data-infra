@@ -40,6 +40,7 @@
 	- `XIAMIMATE_METABASE_VOLUME_NAME=postgres_metabase_data`
 	- `XIAMIMATE_GRAFANA_VOLUME_NAME=postgres_grafana_data`
 2. 通过 `bash postgres/scripts/manage_local_data_infra.sh up` 启动 PostgreSQL / Metabase / Grafana。
+3. `postgres/docker-compose.yml` 已为 PostgreSQL / Metabase / Grafana 配置 `restart: unless-stopped`，Docker daemon 恢复后会自动拉起这三个容器；如果希望 macOS 开机后也自动恢复，需要同时让 Docker Desktop 随登录自动启动。
 
 下一步：
 

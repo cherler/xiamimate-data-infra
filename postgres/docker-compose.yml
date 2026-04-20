@@ -2,6 +2,7 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: xiamimate-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: xiamimate
       POSTGRES_USER: xiamimate
@@ -17,6 +18,7 @@ services:
   metabase:
     image: metabase/metabase:latest
     container_name: xiamimate-metabase
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -35,6 +37,7 @@ services:
   grafana:
     image: grafana/grafana-oss:11.4.0
     container_name: xiamimate-grafana
+    restart: unless-stopped
     ports:
       - "3001:3000"
     environment:
