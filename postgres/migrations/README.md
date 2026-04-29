@@ -22,3 +22,4 @@
 7. `serving/030_serving_indexes.sql`
 8. `sync/040_sync_status_views.sql`
 9. `sync/050_sync_expansion_candidate_views.sql`
+10. `sync/060_sync_candidate_expansion_jobs.sql`

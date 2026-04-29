@@ -13,6 +13,7 @@ FRAGMENTS=(
   "$ROOT_DIR/migrations/serving/030_serving_indexes.sql"
   "$ROOT_DIR/migrations/sync/040_sync_status_views.sql"
   "$ROOT_DIR/migrations/sync/050_sync_expansion_candidate_views.sql"
+  "$ROOT_DIR/migrations/sync/060_sync_candidate_expansion_jobs.sql"
 )
 
 for fragment in "${FRAGMENTS[@]}"; do
