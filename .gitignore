@@ -1,5 +1,6 @@
 .DS_Store
 postgres/.env
+postgres/.env.*
 postgres/pgdata/
 __pycache__/
 *.pyc
